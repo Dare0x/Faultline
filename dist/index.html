@@ -25,12 +25,9 @@
 
   <main class="container">
     <section class="intro" aria-labelledby="page-title">
-      <div>
-        <p class="eyebrow"><span class="index">01</span> ROUTING DEPENDENCIES</p>
-        <h1 id="page-title">Different apps.<br>Shared routes.</h1>
-      </div>
+      <h1 id="page-title">The routes behind<br class="desktop-break"> NEAR swaps.</h1>
       <div class="intro-note">
-        <p>A swap may start in a different wallet and still take the same route. Faultline measures how much observed NEAR Intents flow shares a routing provider.</p>
+        <p>See which apps send swaps through the same provider, then simulate what happens if that route goes offline.</p>
         <p class="snapshot"><span aria-hidden="true"></span><span id="snapshot-date">Loading public snapshot…</span></p>
       </div>
     </section>
@@ -40,10 +37,7 @@
     <section id="stress-test" class="workspace" aria-labelledby="stress-title" hidden>
       <div class="sheet">
         <div class="sheet-top">
-          <div>
-            <p class="eyebrow">OBSERVED 1CLICK FLOW</p>
-            <h2 id="stress-title">Where the volume goes</h2>
-          </div>
+          <h2 id="stress-title">Shared route</h2>
           <fieldset class="segmented" id="window-picker">
             <legend class="sr-only">Routing window</legend>
             <label><input type="radio" name="window" value="24h"><span>24h</span></label>
@@ -51,18 +45,44 @@
             <label><input type="radio" name="window" value="30d" checked><span>30d</span></label>
           </fieldset>
         </div>
-        <div class="chart-key">
-          <span><i class="swatch provider"></i><span id="legend-provider">Selected provider</span></span>
-          <span><i class="swatch remainder"></i><span id="legend-remainder">Other or unclassified flow</span></span>
+        <p class="board-context">Observed 1Click swap volume by app and provider</p>
+        <div id="route-board" class="route-board" data-outage="false">
+          <ul id="board-apps" class="board-apps" aria-label="Largest entries using the selected route"></ul>
+          <svg id="board-wires" class="board-wires" viewBox="0 0 160 224" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div id="board-router" class="board-router">
+            <svg class="router-symbol" viewBox="0 0 96 52" aria-hidden="true">
+              <path class="device-top" d="M12 8h64l12 10H4z"/>
+              <path class="device-side" d="M76 8l12 10v24l-12-8z"/>
+              <rect class="device-front" x="4" y="18" width="72" height="24" rx="3"/>
+              <path class="device-vents" d="M19 11h37m-41 3h49M9 24v12m62-12v12"/>
+              <path class="device-foot" d="M13 42h9v4h-9zm42 0h9v4h-9z"/>
+              <path class="device-ports" d="M16 27h8v7h-8zm13 0h8v7h-8zm13 0h8v7h-8zm13 0h8v7h-8z"/>
+              <path class="device-pins" d="M18 29v2m2-2v2m2-2v2m9-2v2m2-2v2m2-2v2m9-2v2m2-2v2m2-2v2m9-2v2m2-2v2m2-2v2"/>
+              <circle class="device-light" cx="67" cy="30.5" r="1.8"/>
+            </svg>
+            <strong id="board-provider"></strong>
+            <span id="board-state"></span>
+          </div>
         </div>
-        <div id="routing-rows" class="routing-rows"></div>
-        <p id="routing-note" class="chart-note"></p>
+        <p id="board-caption" class="board-caption"></p>
+        <div class="board-actions">
+          <button type="button" class="action" id="outage-toggle" aria-pressed="false">Simulate outage</button>
+          <p id="board-result" class="board-result" hidden></p>
+        </div>
+        <details class="volume-details">
+          <summary>Inspect app volumes</summary>
+          <div class="chart-key">
+            <span><i class="swatch provider"></i><span id="legend-provider">Selected provider</span></span>
+            <span><i class="swatch remainder"></i><span id="legend-remainder">Other or unclassified flow</span></span>
+          </div>
+          <div id="routing-rows" class="routing-rows"></div>
+          <p id="routing-note" class="chart-note"></p>
+        </details>
       </div>
 
       <aside class="scenario" aria-labelledby="scenario-title">
         <div>
-          <p class="eyebrow">SCENARIO</p>
-          <h2 id="scenario-title">Remove a route</h2>
+          <h2 id="scenario-title">Outage impact</h2>
           <label class="label" for="provider">Routing provider</label>
           <select id="provider"></select>
         </div>
@@ -70,7 +90,6 @@
           <output id="exposure-amount">—</output>
           <p id="exposure-label"></p>
         </div>
-        <button type="button" class="action" id="outage-toggle" aria-pressed="false">Simulate outage <span aria-hidden="true">↗</span></button>
         <div class="slider" id="reroute-controls" hidden>
           <label for="reroute">Assumed flow rerouted</label><output for="reroute" id="reroute-value">0%</output>
           <input type="range" min="0" max="100" step="5" value="0" id="reroute">
@@ -81,20 +100,17 @@
 
     <section id="replay" class="replay" aria-labelledby="replay-title" hidden>
       <div class="replay-intro">
-        <p class="eyebrow"><span class="index">02</span> HISTORICAL REPLAY</p>
         <h2 id="replay-title">When NEAR Intents paused.</h2>
         <p>On October 1, 2026, NEAR Intents stopped services after detecting a security incident. The four days starting October 1 had lower swap volume than the previous week. How unusual was that?</p>
         <a class="text-link" href="https://x.com/near_intents/status/2105642219357241796" target="_blank" rel="noopener noreferrer">Read the incident notice ↗</a>
       </div>
       <div class="replay-grid">
         <div class="sheet replay-sheet">
-          <p class="eyebrow">NEAR INTENTS SWAP VOLUME</p>
           <h3>Four-day windows, Thursday to Sunday</h3>
           <div id="history" class="history" aria-label="Historical volume by four-day window"></div>
           <p class="chart-note">DefiLlama · USD · UTC days · Orange marks October 1–4.</p>
         </div>
         <div class="sheet baseline">
-          <p class="eyebrow">COMPARE THE SAME INCIDENT</p>
           <label class="label" for="benchmark">Choose a comparison</label>
           <select id="benchmark"></select>
           <p id="benchmark-detail" class="chart-note"></p>
@@ -109,7 +125,6 @@
 
     <section id="evidence" class="evidence" aria-labelledby="evidence-title" hidden>
       <div>
-        <p class="eyebrow"><span class="index">03</span> REPRODUCE THE RESULT</p>
         <h2 id="evidence-title">Follow the evidence.</h2>
         <p>The routing model sums the amount attributed to the selected provider for each app. The historical replay uses a separate, protocol-wide daily series. It cannot validate the effect of a SwapKit outage.</p>
       </div>

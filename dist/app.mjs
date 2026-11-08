@@ -25,6 +25,40 @@ function sizedSlice(className, usd, maximum) {
   return node;
 }
 
+function drawRouteBoard(result, provider, isOutage) {
+  const apps = result.affected.slice(0, 4);
+  const board = byId('route-board');
+  board.dataset.outage = String(isOutage);
+  byId('board-provider').textContent = provider;
+  byId('board-state').textContent = isOutage ? 'Removed in simulation' : 'Present in snapshot';
+
+  const list = byId('board-apps');
+  list.replaceChildren(...apps.map((app) => {
+    const item = element('li', 'board-app');
+    item.append(element('strong', '', app.name), element('span', '', money(app.exposedUsd)));
+    return item;
+  }));
+
+  const wires = byId('board-wires');
+  wires.replaceChildren(...apps.map((_, index) => {
+    const inputY = (index + 0.5) * 224 / apps.length;
+    const portY = 112 + (index - (apps.length - 1) / 2) * 17;
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('class', 'route-wire');
+    path.setAttribute('d', 'M 0 ' + inputY + ' H 17 C 76 ' + inputY + ' 71 ' + portY + ' 139 ' + portY +
+      ' H ' + (isOutage ? 143 : 160));
+    path.setAttribute('vector-effect', 'non-scaling-stroke');
+    return path;
+  }));
+
+  const remaining = result.affected.length - apps.length;
+  const caption = apps.length ? 'Amounts show observed volume through ' + provider + ' for each entry.' :
+    'The snapshot has no volume attributed to the selected route in this window.';
+  byId('board-caption').textContent = remaining > 0
+    ? caption + ' ' + rounded.format(remaining) + ' more entries share this route.'
+    : caption;
+}
+
 function drawRouting(rows, result, provider, isOutage, reroutePercent) {
   const maximum = Math.max(1, ...rows.map((row) => row.volumeUsd));
   byId('routing-rows').replaceChildren(...rows.map((app) => {
@@ -79,6 +113,7 @@ function setupRouting(snapshot) {
     const rows = byVolume.slice(0, 6);
     const visible = new Set(rows.map(({ slug }) => slug));
     rows.push(...result.affected.filter(({ slug, untagged }) => !untagged && !visible.has(slug)).slice(0, 2));
+    drawRouteBoard(result, providerName, isOutage);
     drawRouting(rows, result, providerName, isOutage, reroutePercent);
 
     byId('exposure-amount').textContent = money(isOutage ? result.displacedUsd : result.exposedUsd);
@@ -87,11 +122,9 @@ function setupRouting(snapshot) {
       : percent(result.observedShare) + ' of observed 1Click volume routed via ' + providerName;
     byId('reroute-value').textContent = reroutePercent + '%';
     button.setAttribute('aria-pressed', String(isOutage));
-    button.replaceChildren(
-      document.createTextNode(isOutage ? 'Reset scenario' : 'Simulate outage'),
-      element('span', '', isOutage ? '↺' : '↗'),
-    );
-    button.lastChild.setAttribute('aria-hidden', 'true');
+    button.textContent = isOutage ? 'Reset scenario' : 'Simulate outage';
+    byId('board-result').hidden = !isOutage;
+    byId('board-result').textContent = money(result.displacedUsd) + ' modeled displacement';
     byId('reroute-controls').hidden = !isOutage;
     byId('scenario-summary').textContent = isOutage
       ? money(result.retainedUsd) + ' remains in the model under this assumption. Actual rerouting capacity is unknown.'
