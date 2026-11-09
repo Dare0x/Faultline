@@ -69,6 +69,15 @@
           <button type="button" class="action" id="outage-toggle" aria-pressed="false">Simulate outage</button>
           <p id="board-result" class="board-result" hidden></p>
         </div>
+        <div class="route-share">
+          <p class="route-share-title">Share of observed 1Click volume</p>
+          <div id="route-share-bar" aria-hidden="true"></div>
+          <ul id="route-share-key" class="chart-key"></ul>
+        </div>
+        <div class="slider" id="reroute-controls" hidden>
+          <label for="reroute">Assumed flow rerouted</label><output for="reroute" id="reroute-value">0%</output>
+          <input type="range" min="0" max="100" step="5" value="0" id="reroute">
+        </div>
         <details class="volume-details">
           <summary>Inspect app volumes</summary>
           <div class="chart-key">
@@ -92,10 +101,6 @@
             <span>View calculation</span>
           </a>
           <p id="exposure-label"></p>
-        </div>
-        <div class="slider" id="reroute-controls" hidden>
-          <label for="reroute">Assumed flow rerouted</label><output for="reroute" id="reroute-value">0%</output>
-          <input type="range" min="0" max="100" step="5" value="0" id="reroute">
         </div>
         <div class="scenario-foot" aria-live="polite"><p id="scenario-summary"></p><p id="scope-summary"></p></div>
       </aside>
@@ -129,12 +134,18 @@
       <div class="replay-grid">
         <div class="sheet replay-sheet">
           <h3>Four-day windows, Thursday to Sunday</h3>
-          <div id="history" class="history" aria-label="Historical volume by four-day window"></div>
-          <p class="chart-note">DefiLlama · USD · UTC days · Orange marks October 1–4.</p>
+          <label class="label" for="benchmark">Choose a comparison for Oct 1–4</label>
+          <select id="benchmark"></select>
+          <div id="history" class="history" role="group" aria-label="Historical volume by four-day window"></div>
+          <div class="chart-key history-key">
+            <span><i class="swatch history-fill" aria-hidden="true"></i>Observed</span>
+            <span><i class="swatch history-incident" aria-hidden="true"></i>Oct 1–4 observed</span>
+            <span><i class="swatch history-benchmark" aria-hidden="true"></i>Oct 1–4 benchmark <strong id="benchmark-volume"></strong></span>
+          </div>
+          <p class="chart-note">DefiLlama · USD · UTC days</p>
         </div>
         <div class="sheet baseline">
-          <label class="label" for="benchmark">Choose a comparison</label>
-          <select id="benchmark"></select>
+          <h3 class="label">Comparison result</h3>
           <p id="benchmark-detail" class="chart-note"></p>
           <div class="baseline-result" aria-live="polite">
             <output id="benchmark-delta">—</output>

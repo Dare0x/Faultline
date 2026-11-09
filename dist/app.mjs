@@ -60,6 +60,29 @@ function drawRouteBoard(result, provider, isOutage) {
     : caption;
 }
 
+function drawRouteShare(result, provider, totalUsd, isOutage) {
+  const shares = isOutage
+    ? [
+      { kind: 'displaced', label: 'Modeled displacement', usd: result.displacedUsd },
+      { kind: 'rerouted', label: 'Assumed rerouted', usd: result.exposedUsd - result.displacedUsd },
+    ]
+    : [{ kind: 'observed', label: 'Via ' + provider, usd: result.exposedUsd }];
+  shares.push({ kind: 'other', label: 'Other observed volume', usd: totalUsd - result.exposedUsd });
+
+  byId('route-share-bar').replaceChildren(...shares.map(({ kind, usd }) => {
+    const segment = element('span', 'share-' + kind);
+    segment.style.width = (totalUsd > 0 ? 100 * usd / totalUsd : 0) + '%';
+    return segment;
+  }));
+  byId('route-share-key').replaceChildren(...shares.map(({ kind, label, usd }) => {
+    const item = element('li');
+    const swatch = element('i', 'swatch share-' + kind);
+    swatch.setAttribute('aria-hidden', 'true');
+    item.append(swatch, element('span', '', label), element('strong', '', totalUsd > 0 ? percent(usd / totalUsd) : '—'));
+    return item;
+  }));
+}
+
 function drawRouting(rows, result, provider, isOutage, reroutePercent) {
   const maximum = Math.max(1, ...rows.map((row) => row.volumeUsd));
   byId('routing-rows').replaceChildren(...rows.map((app) => {
@@ -137,6 +160,7 @@ function setupRouting(snapshot) {
     const visible = new Set(rows.map(({ slug }) => slug));
     rows.push(...result.affected.filter(({ slug, untagged }) => !untagged && !visible.has(slug)).slice(0, 2));
     drawRouteBoard(result, providerName, isOutage);
+    drawRouteShare(result, providerName, window.totalVolumeUsd, isOutage);
     drawRouting(rows, result, providerName, isOutage, reroutePercent);
     drawExposureEvidence(result, providerName, window, windowDates, reroutePercent, isOutage);
 
@@ -183,15 +207,23 @@ function setupRouting(snapshot) {
 function setupReplay(snapshot) {
   const comparison = byId('benchmark');
   comparison.replaceChildren(...benchmarkOptions.map(({ id, name }) => new Option(name, id)));
-  const history = replay(snapshot.replay).history;
-  const maximum = Math.max(...history.map(({ volumeUsd }) => volumeUsd));
-  byId('history').replaceChildren(...history.map((period) => {
+  const { history, references } = replay(snapshot.replay);
+  const maximum = Math.max(...history.map(({ volumeUsd }) => volumeUsd), ...Object.values(references));
+  const unit = 10 ** Math.floor(Math.log10(maximum));
+  const scale = Math.ceil(maximum / unit) * unit;
+  const axis = element('div', 'history-axis');
+  axis.setAttribute('aria-hidden', 'true');
+  axis.append(...[scale, scale / 2, 0].map((value) => element('span', '', money(value))));
+  const benchmarkFill = element('span', 'history-benchmark');
+
+  byId('history').replaceChildren(axis, ...history.map((period) => {
     const column = element('div', 'history-column ' + period.kind);
     const bar = element('div', 'history-track');
-    const barFill = element('span');
-    barFill.style.height = percent(period.volumeUsd / maximum);
+    const barFill = element('span', 'history-fill');
+    barFill.style.height = (100 * period.volumeUsd / scale) + '%';
     bar.setAttribute('aria-hidden', 'true');
     bar.append(barFill);
+    if (period.kind === 'incident') bar.append(benchmarkFill);
     const label = element('div', 'history-label');
     label.append(element('span', '', period.label), element('strong', '', money(period.volumeUsd)));
     column.append(bar, label);
@@ -201,6 +233,8 @@ function setupReplay(snapshot) {
   function render() {
     const benchmark = benchmarkOptions.find(({ id }) => id === comparison.value);
     const result = replay(snapshot.replay, benchmark.id);
+    benchmarkFill.style.height = (100 * result.expectedUsd / scale) + '%';
+    byId('benchmark-volume').textContent = money(result.expectedUsd);
     byId('benchmark-detail').textContent = benchmark.detail;
     byId('benchmark-delta').textContent = (result.change > 0 ? '+' : '') + percent(result.change);
     byId('benchmark-delta').classList.toggle('positive', result.change > 0);

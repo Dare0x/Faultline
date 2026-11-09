@@ -13,7 +13,7 @@ node scripts/verify.mjs
 node scripts/serve.mjs
 ```
 
-Open `http://127.0.0.1:4173`. In the 30-day view, select **SwapKit** and click **Simulate outage**. Move the rerouting slider to 50% and compare the displaced volume with the zero-rerouting case. Select **View calculation** to see the full list of entries, the total observed volume, and how the share and scenario amount are calculated. Switch to the incident replay and compare **Previous week**, **Carry forward the decline**, and **Match Chainflip’s change**.
+Open `http://127.0.0.1:4173`. In the 30-day view, select **SwapKit** and click **Simulate outage**. Move the rerouting slider to 50% and watch the share bar separate modeled displacement, assumed rerouting, and other observed volume. Select **View calculation** to see the contributing entries and the calculation. In the incident replay, switch among **Previous week**, **Carry forward the decline**, and **Match Chainflip’s change**. The outlined bar moves on a fixed scale while the observed October 1–4 bar stays in place.
 
 ## Method
 
