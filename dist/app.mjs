@@ -1,4 +1,4 @@
-import { benchmarkOptions, exposure, providers, replay } from './model.mjs';
+import { benchmarkOptions, exposure, providers, replay, riskLimit } from './model.mjs';
 
 const byId = (id) => document.getElementById(id);
 const moneyFormat = new Intl.NumberFormat('en-US', {
@@ -133,6 +133,32 @@ function drawExposureEvidence(result, provider, window, windowDates, reroutePerc
     exactMoney.format(result.displacedUsd) + ' and retains ' + exactMoney.format(result.retainedUsd) + '.';
 }
 
+function drawRiskLimit(result, provider, totalUsd, reroutePercent, isOutage) {
+  const input = byId('risk-limit');
+  const marker = byId('risk-marker');
+  const threshold = byId('risk-threshold');
+  const status = byId('risk-status');
+  const valid = isOutage && input.validity.valid;
+  byId('risk-panel').hidden = !isOutage;
+  byId('risk-marker-key').hidden = marker.hidden = !valid;
+  input.setAttribute('aria-invalid', String(isOutage && !valid));
+
+  if (!valid) {
+    threshold.textContent = isOutage ? 'Enter a whole percent from 0 to 100.' : '';
+    status.textContent = '';
+    return;
+  }
+
+  const limitPercent = input.valueAsNumber;
+  const { limitUsd, minimumReroutePercent } = riskLimit(result.exposedUsd, totalUsd, limitPercent);
+  const within = reroutePercent >= minimumReroutePercent;
+  marker.style.setProperty('--limit', limitPercent + '%');
+  threshold.textContent = 'At least ' + minimumReroutePercent + '% of ' + provider + ' flow must reroute in this model.';
+  status.dataset.within = String(within);
+  status.textContent = (within ? 'Within limit' : 'Above limit') + ' · ' +
+    money(result.displacedUsd) + ' modeled vs ' + money(limitUsd) + ' allowed.';
+}
+
 function setupRouting(snapshot) {
   const providerControl = byId('provider');
   const button = byId('outage-toggle');
@@ -161,6 +187,7 @@ function setupRouting(snapshot) {
     rows.push(...result.affected.filter(({ slug, untagged }) => !untagged && !visible.has(slug)).slice(0, 2));
     drawRouteBoard(result, providerName, isOutage);
     drawRouteShare(result, providerName, window.totalVolumeUsd, isOutage);
+    drawRiskLimit(result, providerName, window.totalVolumeUsd, reroutePercent, isOutage);
     drawRouting(rows, result, providerName, isOutage, reroutePercent);
     drawExposureEvidence(result, providerName, window, windowDates, reroutePercent, isOutage);
 
@@ -190,6 +217,7 @@ function setupRouting(snapshot) {
   providerControl.addEventListener('change', render);
   button.addEventListener('click', () => { isOutage = !isOutage; render(); });
   range.addEventListener('input', render);
+  byId('risk-limit').addEventListener('input', render);
   byId('exposure-link').addEventListener('click', (event) => {
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     event.preventDefault();

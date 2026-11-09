@@ -38,6 +38,14 @@ export function exposure(window, providerSlug, reroutePercent = 0) {
   };
 }
 
+export function riskLimit(exposedUsd, totalUsd, limitPercent) {
+  const limitUsd = totalUsd * limitPercent / 100;
+  const minimum = exposedUsd > limitUsd ? 100 * (exposedUsd - limitUsd) / exposedUsd : 0;
+  // Round up to the slider's next whole-percent step, allowing for floating-point noise.
+  const minimumReroutePercent = Math.max(0, Math.ceil(minimum - 100 * Number.EPSILON));
+  return { limitUsd, minimumReroutePercent };
+}
+
 export const periods = [
   { label: 'Sep 17–20', start: '2026-09-17', end: '2026-09-20', kind: 'prior' },
   { label: 'Sep 24–27', start: '2026-09-24', end: '2026-09-27', kind: 'prior' },

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { benchmarkOptions, exposure, providers, replay } from '../dist/model.mjs';
+import { benchmarkOptions, exposure, providers, replay, riskLimit } from '../dist/model.mjs';
 
 const snapshot = JSON.parse(await readFile(new URL('../dist/data/snapshot.json', import.meta.url)));
 const dollars = (value) => '$' + (value / 1e6).toFixed(2) + 'M';
@@ -32,12 +32,22 @@ for (const window of snapshot.routing.windows) {
   close(withoutRerouting.displacedUsd + withoutRerouting.retainedUsd, window.totalVolumeUsd);
   close(partialRerouting.displacedUsd, withoutRerouting.exposedUsd / 2);
   close(fullRerouting.retainedUsd, window.totalVolumeUsd);
+  const { limitUsd, minimumReroutePercent } = riskLimit(withoutRerouting.exposedUsd, window.totalVolumeUsd, 10);
+  if (minimumReroutePercent > 0) {
+    assert.ok(exposure(window, 'swapkit', minimumReroutePercent - 1).displacedUsd > limitUsd);
+  }
+  assert.ok(exposure(window, 'swapkit', minimumReroutePercent).displacedUsd <= limitUsd);
   assert.ok(withoutRerouting.withoutProviderUsd >= -0.01);
   assert.ok(withoutRerouting.affected.some((row) => row.exposedUsd < row.volumeUsd - 0.01),
     'Check that the data contains an app with partial routing attribution');
   console.log(window.key + ' SwapKit  ' + dollars(swapkit.volumeUsd) + ' / ' + dollars(window.totalVolumeUsd) +
     '  (' + percent(withoutRerouting.observedShare) + ', ' + withoutRerouting.affected.length + ' affected entries)');
 }
+
+assert.equal(riskLimit(100, 200, 0).minimumReroutePercent, 100);
+assert.equal(riskLimit(100, 200, 25).minimumReroutePercent, 50);
+assert.equal(riskLimit(100, 200, 50).minimumReroutePercent, 0);
+assert.equal(riskLimit(0, 200, 0).minimumReroutePercent, 0);
 
 const incident = replay(snapshot.replay);
 assert.equal(incident.actualUsd, 390_161_724);
@@ -52,4 +62,4 @@ for (const benchmark of benchmarkOptions) {
   console.log(benchmark.name + '  ' + dollars(result.actualUsd) + ' vs ' +
     dollars(result.expectedUsd) + '  (' + percent(result.change) + ')');
 }
-console.log('Routing inputs, scenario arithmetic, and replay comparisons verified.');
+console.log('Routing inputs, scenario arithmetic, risk limits, and replay comparisons verified.');

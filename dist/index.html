@@ -70,13 +70,32 @@
           <p id="board-result" class="board-result" hidden></p>
         </div>
         <div class="route-share">
-          <p class="route-share-title">Share of observed 1Click volume</p>
-          <div id="route-share-bar" aria-hidden="true"></div>
+          <div class="route-share-head">
+            <p class="route-share-title">Share of observed 1Click volume</p>
+            <span class="risk-marker-key" id="risk-marker-key" aria-hidden="true" hidden>Risk limit</span>
+          </div>
+          <div class="route-share-track" aria-hidden="true">
+            <div id="route-share-bar"></div>
+            <span id="risk-marker" hidden></span>
+          </div>
           <ul id="route-share-key" class="chart-key"></ul>
         </div>
         <div class="slider" id="reroute-controls" hidden>
           <label for="reroute">Assumed flow rerouted</label><output for="reroute" id="reroute-value">0%</output>
-          <input type="range" min="0" max="100" step="5" value="0" id="reroute">
+          <input type="range" min="0" max="100" step="1" value="0" id="reroute">
+        </div>
+        <div class="risk-panel" id="risk-panel" hidden>
+          <div class="risk-controls">
+            <label for="risk-limit">Max displacement <span>of observed 1Click volume</span></label>
+            <div class="risk-input">
+              <input type="number" id="risk-limit" min="0" max="100" step="1" value="10" required aria-label="Maximum displaced share of observed 1Click volume, percent">
+              <span aria-hidden="true">%</span>
+            </div>
+          </div>
+          <div class="risk-result" role="status">
+            <p id="risk-threshold"></p>
+            <p id="risk-status"></p>
+          </div>
         </div>
         <details class="volume-details">
           <summary>Inspect app volumes</summary>

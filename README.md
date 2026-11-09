@@ -13,12 +13,13 @@ node scripts/verify.mjs
 node scripts/serve.mjs
 ```
 
-Open `http://127.0.0.1:4173`. In the 30-day view, select **SwapKit** and click **Simulate outage**. Move the rerouting slider to 50% and watch the share bar separate modeled displacement, assumed rerouting, and other observed volume. Select **View calculation** to see the contributing entries and the calculation. In the incident replay, switch among **Previous week**, **Carry forward the decline**, and **Match Chainflip’s change**. The outlined bar moves on a fixed scale while the observed October 1–4 bar stays in place.
+Open `http://127.0.0.1:4173`. In the 30-day view, select **SwapKit** and click **Simulate outage**. Leave **Max displacement** at 10% and move the rerouting slider from 70% to 71% to see the model cross the risk limit. Select **View calculation** to see the contributing entries and the calculation. In the incident replay, switch among **Previous week**, **Carry forward the decline**, and **Match Chainflip’s change**. The outlined bar moves on a fixed scale while the observed October 1–4 bar stays in place.
 
 ## Method
 
 - **Routing.** The denominator is observed 1Click volume in the captured window. The numerator is the sum of per-app volume specifically attributed to the selected provider in NearStats’ `vias` field. An app’s other volume stays in the model. Entries without a routing attribution remain visible in the denominator and are treated as unknown. The windows overlap, and the 7-day and 30-day windows include the partial UTC capture day.
 - **Scenario.** Displaced volume equals attributed provider volume multiplied by one minus the assumed rerouted share. Remaining modeled volume is observed volume minus displaced volume. The slider represents an assumption about how much flow can switch routes. Availability, slippage and spare capacity require separate evidence.
+- **Risk limit.** The dollar limit is the chosen percentage of all observed 1Click volume. If the selected provider exceeds that amount, the minimum rerouted share is the difference divided by the provider's observed volume, rounded up to the slider's next whole percentage point.
 - **Replay.** DefiLlama’s daily NEAR Intents series is summed into matched Thursday–Sunday periods. The three reference values are the previous week's volume, that volume multiplied by the prior week-on-week ratio, and that volume multiplied by Chainflip's incident-week to prior-week ratio. Chainflip is a cross-chain comparator with its own market and operational risks. These are descriptive comparisons of aggregate volume. They cannot isolate the impact of the protocol pause or validate a hypothetical SwapKit outage.
 - **Coverage.** The routing snapshot comes from the NearStats view of 1Click. The historical series has a different, protocol-wide scope. The current routing attribution cannot recover historical per-provider flow during the incident. The two denominators stay separate throughout the app.
 
