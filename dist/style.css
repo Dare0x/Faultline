@@ -120,7 +120,26 @@ select { width: 100%; border: 1px solid #b9c3ba; border-radius: 5px; padding: 9p
 .scenario select { color: #fffaf2; background: #23493f; border-color: #678c7d; color-scheme: dark; }
 .scenario-metric { padding-top: 7px; }
 .scenario-metric output, .baseline-result output { font: clamp(35px, 5vw, 60px)/1 var(--serif); letter-spacing: -.04em; font-variant-numeric: tabular-nums; display: block; }
+.exposure-link { display: inline-grid; gap: 7px; text-decoration: none; }
+.exposure-link span { color: #ffcab0; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.exposure-link:hover span { color: #fffaf2; }
 .scenario-metric p { color: #e0ebe4; margin-top: 5px; font-size: 13px; }
+.exposure-evidence { grid-column: 1 / -1; scroll-margin-top: 16px; }
+.exposure-evidence summary { cursor: pointer; font-weight: 650; }
+.exposure-formula { display: grid; grid-template-columns: 1fr 1fr 1fr; margin: 16px 0 0; border-block: 1px solid var(--line); }
+.exposure-formula div { min-width: 0; padding: 12px 14px; }
+.exposure-formula div + div { border-left: 1px solid var(--line); }
+.exposure-formula dt { font-size: 12px; color: var(--muted); }
+.exposure-formula dd { margin: 3px 0 0; font: 650 15px/1.4 var(--mono); overflow-wrap: anywhere; }
+.exposure-scenario { margin-top: 12px; font-size: 13px; font-weight: 650; }
+.exposure-entries-title { margin-top: 18px; font-family: inherit; font-size: 14px; font-weight: 650; letter-spacing: normal; }
+.exposure-table-scroll { max-height: 24rem; overflow: auto; margin-top: 7px; border-block: 1px solid var(--line); }
+.exposure-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+.exposure-table :is(th, td) { padding: 7px 9px; border-bottom: 1px solid var(--line); text-align: left; overflow-wrap: anywhere; }
+.exposure-table thead th { position: sticky; top: 0; background: var(--card); }
+.exposure-table td, .exposure-table thead th:not(:first-child) { text-align: right; }
+.exposure-table td { font-family: var(--mono); white-space: nowrap; }
+.exposure-table tbody tr:last-child > * { border-bottom: 0; }
 .action { min-height: 44px; border: 1px solid var(--deep); border-radius: 5px; padding: 9px 13px; color: #fffaf2; background: var(--deep); font-weight: 750; }
 .action:hover { background: #275246; }
 .action[aria-pressed=true] { background: #fff7ef; color: #91401f; border-color: #bd6845; }
@@ -179,6 +198,11 @@ section[id] { scroll-margin-top: 18px; }
   .intro-note { font-size: 15px; }
   .replay, .evidence { margin-top: 44px; }
   .evidence { gap: 14px; }
+  .exposure-formula { grid-template-columns: 1fr; }
+  .exposure-formula div { padding-inline: 0; }
+  .exposure-formula div + div { border-left: 0; border-top: 1px solid var(--line); }
+  .exposure-table :is(th, td) { padding-inline: 5px; }
+  .exposure-table td { font-size: 11px; }
 }
 @media (max-width: 370px) {
   .container { width: calc(100% - 24px); }

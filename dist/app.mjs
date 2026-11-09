@@ -4,6 +4,7 @@ const byId = (id) => document.getElementById(id);
 const moneyFormat = new Intl.NumberFormat('en-US', {
   style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 2,
 });
+const exactMoney = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 const percentageFormat = new Intl.NumberFormat('en-US', {
   style: 'percent', maximumFractionDigits: 1,
 });
@@ -89,10 +90,31 @@ function drawRouting(rows, result, provider, isOutage, reroutePercent) {
     rounded.format(result.affected.length) + ' affected entries).';
 }
 
+function drawExposureEvidence(result, provider, window, windowDates, reroutePercent, isOutage) {
+  byId('exposure-window').textContent = windowDates + ' · NearStats 1Click snapshot';
+  byId('exposure-provider-label').textContent = 'Volume via ' + provider;
+  byId('exposure-numerator').textContent = exactMoney.format(result.exposedUsd);
+  byId('exposure-denominator').textContent = exactMoney.format(window.totalVolumeUsd);
+  byId('exposure-share').textContent = percent(result.observedShare);
+  byId('exposure-entries-title').textContent = 'Contributing entries (' + rounded.format(result.affected.length) + ')';
+  byId('exposure-entries').replaceChildren(...result.affected.map((app) => {
+    const row = element('tr');
+    const name = element('th', '', app.name);
+    name.scope = 'row';
+    row.append(name, element('td', '', exactMoney.format(app.exposedUsd)), element('td', '', exactMoney.format(app.volumeUsd)));
+    return row;
+  }));
+  const scenario = byId('exposure-scenario');
+  scenario.hidden = !isOutage;
+  scenario.textContent = 'With ' + reroutePercent + '% rerouting assumed, the model displaces ' +
+    exactMoney.format(result.displacedUsd) + ' and retains ' + exactMoney.format(result.retainedUsd) + '.';
+}
+
 function setupRouting(snapshot) {
   const providerControl = byId('provider');
   const button = byId('outage-toggle');
   const range = byId('reroute');
+  const evidence = byId('exposure-evidence');
   let window = snapshot.routing.windows.find(({ key }) => key === '30d');
   let isOutage = false;
 
@@ -108,6 +130,7 @@ function setupRouting(snapshot) {
     const providerName = providerControl.selectedOptions[0]?.textContent ?? 'Unavailable';
     const reroutePercent = Number(range.value);
     const result = exposure(window, providerControl.value, isOutage ? reroutePercent : 0);
+    const windowDates = utcTime.formatRange(new Date(window.startsAt), new Date(window.endsAt)) + ' UTC';
     const byVolume = result.apps.filter(({ untagged, firstParty }) => !untagged && !firstParty)
       .sort((a, b) => b.volumeUsd - a.volumeUsd);
     const rows = byVolume.slice(0, 6);
@@ -115,6 +138,7 @@ function setupRouting(snapshot) {
     rows.push(...result.affected.filter(({ slug, untagged }) => !untagged && !visible.has(slug)).slice(0, 2));
     drawRouteBoard(result, providerName, isOutage);
     drawRouting(rows, result, providerName, isOutage, reroutePercent);
+    drawExposureEvidence(result, providerName, window, windowDates, reroutePercent, isOutage);
 
     byId('exposure-amount').textContent = money(isOutage ? result.displacedUsd : result.exposedUsd);
     byId('exposure-label').textContent = isOutage
@@ -130,7 +154,7 @@ function setupRouting(snapshot) {
       ? money(result.retainedUsd) + ' remains in the model under this assumption. Actual rerouting capacity is unknown.'
       : money(window.totalVolumeUsd) + ' observed across ' + rounded.format(window.totalSwaps) +
         ' swaps in this window. Choose a provider to test the exposure.';
-    byId('scope-summary').textContent = window.rangeLabel + '. ' + money(result.withoutProviderUsd) +
+    byId('scope-summary').textContent = windowDates + '. ' + money(result.withoutProviderUsd) +
       ' has no provider attribution in this dataset. Coverage is limited to the NearStats 1Click snapshot.';
   }
 
@@ -142,6 +166,16 @@ function setupRouting(snapshot) {
   providerControl.addEventListener('change', render);
   button.addEventListener('click', () => { isOutage = !isOutage; render(); });
   range.addEventListener('input', render);
+  byId('exposure-link').addEventListener('click', (event) => {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    const target = '#' + evidence.id;
+    if (location.hash !== target) history.pushState(null, '', target);
+    evidence.open = true;
+    evidence.scrollIntoView();
+    evidence.querySelector('summary').focus({ preventScroll: true });
+  });
+  evidence.open = location.hash === '#' + evidence.id;
   fillProviders('swapkit');
   render();
 }
@@ -186,6 +220,7 @@ async function start() {
   setupReplay(snapshot);
   byId('snapshot-date').textContent = 'Data snapshot · ' + utcTime.format(new Date(snapshot.routing.generatedAt)) + ' UTC';
   for (const id of ['stress-test', 'replay', 'evidence']) byId(id).hidden = false;
+  if (location.hash === '#exposure-evidence') byId('exposure-evidence').scrollIntoView();
 }
 
 start().catch((error) => {

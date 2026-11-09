@@ -87,7 +87,10 @@
           <select id="provider"></select>
         </div>
         <div class="scenario-metric">
-          <output id="exposure-amount">—</output>
+          <a class="exposure-link" id="exposure-link" href="#exposure-evidence" aria-describedby="exposure-label">
+            <output id="exposure-amount">—</output>
+            <span>View calculation</span>
+          </a>
           <p id="exposure-label"></p>
         </div>
         <div class="slider" id="reroute-controls" hidden>
@@ -96,6 +99,25 @@
         </div>
         <div class="scenario-foot" aria-live="polite"><p id="scenario-summary"></p><p id="scope-summary"></p></div>
       </aside>
+
+      <details id="exposure-evidence" class="sheet exposure-evidence">
+        <summary>Exposure calculation</summary>
+        <p id="exposure-window" class="chart-note"></p>
+        <dl class="exposure-formula">
+          <div><dt id="exposure-provider-label">Volume via provider</dt><dd id="exposure-numerator"></dd></div>
+          <div><dt>All observed 1Click volume</dt><dd id="exposure-denominator"></dd></div>
+          <div><dt>Share of observed volume</dt><dd id="exposure-share"></dd></div>
+        </dl>
+        <p class="chart-note">The total includes swaps with no provider attribution. The model adds the source values before rounding.</p>
+        <p id="exposure-scenario" class="exposure-scenario" hidden></p>
+        <h3 id="exposure-entries-title" class="exposure-entries-title">Contributing entries</h3>
+        <div class="exposure-table-scroll" role="region" aria-labelledby="exposure-entries-title" tabindex="0">
+          <table class="exposure-table" aria-labelledby="exposure-entries-title">
+            <thead><tr><th scope="col">Entry</th><th scope="col">Via provider</th><th scope="col">Total observed</th></tr></thead>
+            <tbody id="exposure-entries"></tbody>
+          </table>
+        </div>
+      </details>
     </section>
 
     <section id="replay" class="replay" aria-labelledby="replay-title" hidden>
